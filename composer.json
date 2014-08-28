@@ -1,5 +1,11 @@
 {
   "name": "appzap/amazon-wish-lister",
+  "repositories": [
+    {
+      "url": "https://github.com/electrolinux/phpquery",
+      "type": "git"
+    },
+  ],
   "require": {
     "electrolinux/phpquery": "dev-master"
   }
