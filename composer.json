@@ -4,7 +4,7 @@
     {
       "url": "https://github.com/electrolinux/phpquery",
       "type": "git"
-    },
+    }
   ],
   "require": {
     "electrolinux/phpquery": "dev-master"
