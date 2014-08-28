@@ -1,0 +1,6 @@
+{
+  "name": "appzap/amazon-wish-lister",
+  "require": {
+    "electrolinux/phpquery": "dev-master"
+  }
+}
