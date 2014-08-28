@@ -5,13 +5,12 @@
  *
  * URL: http://www.justinscarpetti.com/projects/amazon-wish-lister/
  * URL: https://github.com/doitlikejustin/amazon-wish-lister
- * 
+ *
  * Author: Justin Scarpetti
- * 
+ *
  */
 error_reporting(0);
 set_time_limit(60);
-require_once('phpquery.php');
 
 //?id=YOUR_AMAZON_ID
 //get the amazon id or force an ID if none is passed
@@ -57,14 +56,14 @@ else
 	{
 		$pages = count(pq('#wishlistPagination li[data-action="pag-trigger"]'));
 	}
-	
+
 	//if no "$pages" then only 1 page exists
 	if(empty($pages)) $pages=1;
-	
+
 	for($page_num=1; $page_num<=$pages; $page_num++)
 	{
 		$contents = phpQuery::newDocumentFile("$baseurl/registry/wishlist/$amazon_id?$reveal&$sort&layout=standard&page=$page_num");
-		
+
 		if($contents == '')
 		{
 			echo('ERROR');
@@ -73,18 +72,18 @@ else
 		else
 		{
 			//get all items
-			$items = pq('tbody.itemWrapper'); 
-			
+			$items = pq('tbody.itemWrapper');
+
 			//if items exist (the let's use the old Amazon wishlist
 			if($items->html())
 			{
 				//loop through items
 				foreach($items as $item)
 				{
-					$check_if_regular = pq($item)->find('span.commentBlock nobr');	
-					
+					$check_if_regular = pq($item)->find('span.commentBlock nobr');
+
 					if($check_if_regular != '')
-					{	
+					{
 						//$array[$i]['array'] = pq($item)->html();
 						$array[$i]['num'] = $i + 1;
 						$array[$i]['name'] = htmlentities(pq($item)->find('span.productTitle strong a')->html(), ENT_COMPAT|ENT_HTML401, 'UTF-8', FALSE);
@@ -98,7 +97,7 @@ else
 						$array[$i]['comment'] = pq($item)->find('span.commentValueText')->html();
 						$array[$i]['picture'] = pq($item)->find('td.productImage a img')->attr('src');
 						$array[$i]['page'] = $page_num;
-						
+
 						$i++;
 					}
 				}
@@ -108,19 +107,19 @@ else
 			else
 			{
 				$items = pq('.g-items-section div[id^="item_"]');
-				
+
 				//loop through items
 				foreach($items as $item)
 				{
 					$name = trim(htmlentities(pq($item)->find('a[id^="itemName_"]')->html(), ENT_COMPAT|ENT_HTML401, 'UTF-8', FALSE));
 					$link = pq($item)->find('a[id^="itemName_"]')->attr('href');
-					
+
 					if(!empty($name) && !empty($link))
 					{
 						$total_ratings = pq($item)->find('div[id^="itemInfo_"] div:a-spacing-small:first a.a-link-normal:last')->html();
 						$total_ratings = trim(str_replace(array('(', ')'), '', $total_ratings));
 						$total_ratings = is_numeric($total_ratings) ? $total_ratings : '';
-						
+
 						//$array[$i]['array'] = pq($item)->html();
 						$array[$i]['num'] = $i + 1;
 						$array[$i]['name'] = $name;
@@ -134,12 +133,12 @@ else
 						$array[$i]['comment'] = trim(pq($item)->find('span[id^="itemComment_"]')->html());
 						$array[$i]['picture'] = pq($item)->find('div[id^="itemImage_"] img')->attr('src');
 						$array[$i]['page'] = $page_num;
-						
+
 						$i++;
 					}
 				}
 			}
-		}	
+		}
 	}
 }
 
@@ -152,9 +151,9 @@ function xml_ecode($array) {
 	if (is_array($array) || is_object($array)) {
 		foreach ($array as $key=>$value) {
 			if (is_numeric($key)) {
-				$key = 'item'; 
+				$key = 'item';
 			}
-			
+
 			//create the xml tags
 			$xml .= '<' . $key . '>' . xml_ecode($value) . '</' . $key . '>';
 		}

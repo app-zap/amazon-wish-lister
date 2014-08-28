@@ -8,5 +8,10 @@
   ],
   "require": {
     "electrolinux/phpquery": "0.9.x"
+  },
+  "autoload": {
+    "psr-4": {
+      "AppZap\\AmazonWishLister\\": "classes/"
+    }
   }
 }
