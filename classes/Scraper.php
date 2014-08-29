@@ -7,11 +7,18 @@ class Scraper {
   const WISHLIST_VERSION_OLD = 20;
 
   /**
+   * @var string
+   */
+  protected $baseUrl;
+
+  /**
    * @var int
    */
   protected $wishlistVersion;
 
   public function scrape($url) {
+    $parsedUrl = parse_url($url);
+    $this->baseUrl = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
     $scrapedItems = [];
     $mainPageContent = \phpQuery::newDocumentFile($url);
     $this->determineWishlistVersion($mainPageContent);
@@ -68,6 +75,9 @@ class Scraper {
         self::WISHLIST_VERSION_OLD => 'a[id^="itemName_"]',
     ];
     $link = $this->q($linkSelector, $item)->attr('href');
+    if (strpos($link, 'amazon.') === FALSE) {
+      $link = $this->baseUrl . $link;
+    }
 
     $oldPrice = $item->find('span.strikeprice')->html();
 
