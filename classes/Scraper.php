@@ -7,6 +7,12 @@ class Scraper {
   const WISHLIST_VERSION_OLD = 20;
   const WISHLIST_VERSION_08_2014 = 1409295586;
 
+  const WISH_PRIORITY_LOWEST = '_lowest';
+  const WISH_PRIORITY_LOW = '_low';
+  const WISH_PRIORITY_MEDIUM = '_medium';
+  const WISH_PRIORITY_HIGH = '_high';
+  const WISH_PRIORITY_HIGHEST = '_highest';
+
   /**
    * @var string
    */
@@ -38,8 +44,8 @@ class Scraper {
       $pageContent = \phpQuery::newDocumentFile($url . '?page=' . $page_num);
 
       $itemsSelector = [
-        self::WISHLIST_VERSION_VERYOLD => 'tbody.itemWrapper',
-        self::WISHLIST_VERSION_OLD => '.g-items-section div[id^="item_"]',
+          self::WISHLIST_VERSION_VERYOLD => 'tbody.itemWrapper',
+          self::WISHLIST_VERSION_OLD => '.g-items-section div[id^="item_"]',
       ];
       $items = $this->q($itemsSelector, $pageContent);
       foreach ($items as $item) {
@@ -96,41 +102,45 @@ class Scraper {
         self::WISHLIST_VERSION_VERYOLD => 'span.commentBlock nobr',
         self::WISHLIST_VERSION_OLD => 'div[id^="itemAction_"] .a-size-small',
     ];
-    $dateAdded = explode('"', $this->q($dateAddedSelector, $item)->html())[1];
+    $dateAdded = $this->q($dateAddedSelector, $item)->html();
+    if (strpos($dateAdded, '"') !== FALSE) {
+      $dateAdded = explode('"', $dateAdded)[1];
+    }
+    $dateAdded = str_replace('Added', '', $dateAdded);
 
     $prioritySelector = [
-      self::WISHLIST_VERSION_VERYOLD => 'span.priorityValueText',
-      self::WISHLIST_VERSION_OLD => 'span[id^="itemPriorityLabel_"]',
+        self::WISHLIST_VERSION_VERYOLD => 'span.priorityValueText',
+        self::WISHLIST_VERSION_OLD => 'span[id^="itemPriorityLabel_"]',
     ];
-    $priority = $this->q($prioritySelector, $item)->html();
+    $priority = $this->resolveLabel('priority', $this->q($prioritySelector, $item)->html());
 
     $rating = $item->find('span.asinReviewsSummary a span span')->html();
 
     $totalRatings = $this->q('span.crAvgStars a:nth-child(2)', $item)->html();
 
     $commentSelector = [
-      self::WISHLIST_VERSION_VERYOLD => 'span.commentValueText',
-      self::WISHLIST_VERSION_OLD => 'span[id^="itemComment_"]',
+        self::WISHLIST_VERSION_VERYOLD => 'span.commentValueText',
+        self::WISHLIST_VERSION_OLD => 'span[id^="itemComment_"]',
     ];
     $comment = $this->q($commentSelector, $item)->html();
 
     $pictureSelector = [
-      self::WISHLIST_VERSION_VERYOLD => 'td.productImage a img',
-      self::WISHLIST_VERSION_OLD => 'div[id^="itemImage_"] img',
+        self::WISHLIST_VERSION_VERYOLD => 'td.productImage a img',
+        self::WISHLIST_VERSION_OLD => 'div[id^="itemImage_"] img',
     ];
     $picture = $this->q($pictureSelector, $item)->attr('src');
 
     $scrapedItem = [
-      'name' => $name,
-      'link' => $link,
-      'old-price' => $oldPrice,
-      'new-price' => $newPrice,
-      'date-added' => $dateAdded,
-      'priority' => $priority,
-      'rating' => $rating,
-      'total-ratings' => $totalRatings,
-      'comment' => $comment,
-      'picture' => $picture,
+        'name' => $name,
+        'link' => $link,
+        'old-price' => $oldPrice,
+        'new-price' => $newPrice,
+        'date-added' => $dateAdded,
+        'priority' => $priority,
+        'rating' => $rating,
+        'total-ratings' => $totalRatings,
+        'comment' => $comment,
+        'picture' => $picture,
     ];
     return array_map('trim', $scrapedItem);
   }
@@ -166,6 +176,38 @@ class Scraper {
       }
     }
     return \phpQuery::pq($selector, $context);
+  }
+
+  /**
+   * @param $field
+   * @param $label
+   */
+  protected function resolveLabel($field, $labelToResolve) {
+    $labels = [
+      'priority' => [
+          // english
+          'lowest' => self::WISH_PRIORITY_LOWEST,
+          'low' => self::WISH_PRIORITY_LOW,
+          'medium' => self::WISH_PRIORITY_MEDIUM,
+          'high' => self::WISH_PRIORITY_HIGH,
+          'highest' => self::WISH_PRIORITY_HIGHEST,
+          // german
+          'Nicht so wichtig' => self::WISH_PRIORITY_LOWEST,
+          'Bin mir nicht sicher' => self::WISH_PRIORITY_LOW,
+          'Würde mich freuen' => self::WISH_PRIORITY_MEDIUM,
+          'Hätte ich sehr gerne' => self::WISH_PRIORITY_HIGH,
+          'Muss ich haben' => self::WISH_PRIORITY_HIGHEST,
+      ],
+    ];
+    if (array_key_exists($field, $labels)) {
+      foreach ($labels[$field] as $label => $value) {
+        if (strtolower($label) === trim(strtolower($labelToResolve))) {
+          $labelToResolve = $value;
+          break;
+        }
+      }
+    }
+    return $labelToResolve;
   }
 
 }
