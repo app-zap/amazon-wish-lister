@@ -81,7 +81,7 @@ class Scraper {
         self::WISHLIST_VERSION_VERYOLD => 'span.commentBlock nobr',
         self::WISHLIST_VERSION_OLD => 'div[id^="itemAction_"] .a-size-small',
     ];
-    $dateAdded = str_replace('Added', '', $this->q($dateAddedSelector, $item)->html());
+    $dateAdded = explode('"', $this->q($dateAddedSelector, $item)->html())[1];
 
     $prioritySelector = [
       self::WISHLIST_VERSION_VERYOLD => 'span.priorityValueText',
