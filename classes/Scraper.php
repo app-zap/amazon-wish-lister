@@ -5,6 +5,7 @@ class Scraper {
 
   const WISHLIST_VERSION_VERYOLD = 10;
   const WISHLIST_VERSION_OLD = 20;
+  const WISHLIST_VERSION_08_2014 = 1409295586;
 
   /**
    * @var string
@@ -84,8 +85,12 @@ class Scraper {
     $newPriceSelector = [
         self::WISHLIST_VERSION_VERYOLD => 'span.wlPriceBold strong',
         self::WISHLIST_VERSION_OLD => 'div.a-spacing-small div.a-row span.a-size-medium.a-color-price',
+        self::WISHLIST_VERSION_08_2014 => 'div.price-section span',
     ];
     $newPrice = $this->q($newPriceSelector, $item)->html();
+    if (strpos($newPrice, '-') !== FALSE) {
+      $newPrice = explode('-', $newPrice)[0];
+    }
 
     $dateAddedSelector = [
         self::WISHLIST_VERSION_VERYOLD => 'span.commentBlock nobr',
@@ -134,7 +139,9 @@ class Scraper {
    * @param \phpQueryObject $mainPageContent
    */
   protected function determineWishlistVersion(\phpQueryObject $mainPageContent) {
-    if (count($this->q('tbody.itemWrapper', $mainPageContent)) > 0) {
+    if (count($this->q('#control-bar', $mainPageContent))) {
+      $this->wishlistVersion = self::WISHLIST_VERSION_08_2014;
+    } elseif (count($this->q('tbody.itemWrapper', $mainPageContent))) {
       $this->wishlistVersion = self::WISHLIST_VERSION_VERYOLD;
     } else {
       $this->wishlistVersion = self::WISHLIST_VERSION_OLD;
@@ -148,7 +155,15 @@ class Scraper {
    */
   protected function q($selector, $context) {
     if (is_array($selector)) {
-      $selector = $selector[$this->wishlistVersion];
+      $versions = array_keys($selector);
+      sort($versions, SORT_NUMERIC);
+      $versions = array_reverse($versions);
+      foreach ($versions as $version) {
+        if ($version <= $this->wishlistVersion) {
+          $selector = $selector[$version];
+          break;
+        }
+      }
     }
     return \phpQuery::pq($selector, $context);
   }
