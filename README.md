@@ -19,6 +19,8 @@ This Scraper accepts a wish list url and (after a few seconds of thinking about 
 * Comments on item (set by you)
 * Picture of item
 
+The Scraper is tested with wish lists from amazon.com :us: and amazon.de :de:.
+
 ## How to use
 
 I recommend to include it via composer. e.g.:
